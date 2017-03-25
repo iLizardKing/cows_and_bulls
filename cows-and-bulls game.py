@@ -9,18 +9,21 @@ class Model:
     def __init__(self):
         self.bull = 0  # Coincides digit, but not a place
         self.cow = 0  # Coincides digit and a place
+        self.digit_num = 3
         self.user_number = None
         self.sec_number = None
         self.sec_number_list = []
         self.win = False
         self.round = 1
 
-    def generate_digit(self, digit_num=3):
-        self.sec_number = randint(10 ** (digit_num - 1), 10 ** digit_num - 1)
+    def generate_digit(self):
+        self.sec_number = randint(0, 10**self.digit_num - 1)
         self.sec_number_list = []
-        for d in range(1, digit_num + 1):
-            self.sec_number_list.append(self.sec_number % (10 ** d) // 10 ** (d - 1))
-            # print(self.sec_number)
+        for d in range(1, self.digit_num + 1):
+            self.sec_number_list.append(
+                self.sec_number % (10 ** d) // 10 ** (d - 1)
+            )
+        print(self.sec_number)
 
     def estimate_value(self, user_number):
         self.bull = 0
@@ -48,7 +51,8 @@ class Model:
 
     def is_win(self, user_number):
         self.user_number = user_number
-        if self.sec_number == self.user_number:
+        if str(self.sec_number).zfill(self.digit_num) == \
+                str(self.user_number).zfill(self.digit_num):
             self.win = True
         else:
             self.win = False
@@ -57,8 +61,7 @@ class Model:
     def start_game(self, digit_num=3):
         self.win = False
         if digit_num in range(DIGIT_COUNT_MIN, DIGIT_COUNT_MAX + 1):
-            self.generate_digit(digit_num)
-        else:
+            self.digit_num = digit_num
             self.generate_digit()
         self.round = 1
 
@@ -130,14 +133,14 @@ class TkView(Frame):
                 self.digit_var.set(st)
 
     def get_digit(self):
-        if self.digit_var.get():
-            digit = int(self.digit_var.get())
-            if len(str(digit)) == len(self.model.sec_number_list):
+        digit = self.digit_var.get()
+        if digit:
+            if len(digit) == self.model.digit_num:
                 self.answer_ent.delete(0, 'end')
-                return digit
+                return int(digit)
             else:
                 self.answer_ent.config(bg='red')
-                self.answer_ent.after(1000, lambda: self.answer_ent.config(bg='white'))
+                self.answer_ent.after(500, lambda: self.answer_ent.config(bg='white'))
 
     def add_to_log(self, string):
         self.log_txt['state'] = 'normal'
@@ -169,7 +172,7 @@ class TkView(Frame):
         self.answer_but['state'] = 'normal'
         self.answer_ent['state'] = 'normal'
         message = 'Conceive {}-valued secret number, try to guess!'. \
-            format(len(str(self.model.sec_number)))
+            format(self.model.digit_num)
         self.add_to_log(message)
 
 
